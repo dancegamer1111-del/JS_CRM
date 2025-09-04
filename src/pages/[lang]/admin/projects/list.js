@@ -34,6 +34,7 @@ function AdminProjectsList() {
       if (filter.status) params.append('status', filter.status);
       params.append('limit', '50');
 
+
       if (filter.search) {
         url = `${API_BASE_URL}/api/v2/projects/search`;
         params.append('q', filter.search);
