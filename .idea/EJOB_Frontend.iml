@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/.next/cache/eslint" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/cache/swc" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/cache/webpack/client-production" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/cache/webpack/edge-server-production" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/cache/webpack/server-production" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/server/pages/[lang]" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/server/pages/[lang]/admin" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/server/pages/[lang]/events" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/server/pages/[lang]/projects" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/static/chunks/fallback" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/static/chunks/pages/[lang]" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/static/chunks/pages/[lang]/admin" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/static/chunks/pages/[lang]/events" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/static/chunks/pages/[lang]/projects" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/static/webpack/pages" />
+      <excludeFolder url="file://$MODULE_DIR$/.next/static/webpack/pages/[lang]" />
+      <excludeFolder url="file://$MODULE_DIR$/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/node_modules/@napi-rs" />
+      <excludeFolder url="file://$MODULE_DIR$/node_modules/@tybys" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
