@@ -452,7 +452,6 @@ const CourseDetailPage = () => {
                                   {/* Тесты урока */}
                                   {lesson.tests && lesson.tests.length > 0 && (
                                     <div className="mt-2 text-xs text-gray-500 flex items-center">
-                                      <FileText className="h-4 w-4 mr-1 text-gray-400" />
                                       {lesson.tests.length} {lesson.tests.length === 1 ? 'тест' :
                                         lesson.tests.length < 5 ? 'теста' : 'тестов'}
                                     </div>

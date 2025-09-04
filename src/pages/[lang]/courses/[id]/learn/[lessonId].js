@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Clock,
   Play,
-  FileText,
   AlertTriangle
 } from 'react-feather';
 
@@ -387,7 +386,6 @@ const LearningPage = () => {
                     className={`px-5 py-3 font-medium text-sm flex items-center ${activeTab === 'tests' ? 'border-b-2 border-teal-500 text-teal-600' : 'text-gray-500 hover:text-gray-700'}`}
                     onClick={() => setActiveTab('tests')}
                   >
-                    <FileText className="h-4 w-4 mr-2" />
                     Тесты ({currentLesson.tests.length})
                     {currentLesson.tests.every(test => isTestCompleted(test.id)) && (
                       <span className="ml-2 inline-block w-4 h-4 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
