@@ -27,7 +27,7 @@ function AdminProjectsList() {
     try {
       setLoading(true);
 
-      let url = `${API_BASE_URL}/api/v2/projects`;
+      let url = `${API_BASE_URL}/api/v2/projects/`;
       const params = new URLSearchParams();
 
       if (filter.type) params.append('project_type', filter.type);
