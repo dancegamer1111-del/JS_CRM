@@ -14,16 +14,23 @@ const VideoIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w
 const UploadIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>;
 const SaveIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>;
 const EyeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>;
+const GlobeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>;
 
 export default function CreateProjectPage() {
   const router = useRouter();
   const { lang } = router.query;
   const [currentLang, setCurrentLang] = useState('ru');
+  const [activeTab, setActiveTab] = useState('kz'); // Активная языковая вкладка
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   const [formData, setFormData] = useState({
+    // Казахский контент
     title: '',
     description: '',
+    // Русский контент
+    title_ru: '',
+    description_ru: '',
+    // Общие поля
     author: '',
     project_type: 'voting',
     start_date: '',
@@ -68,7 +75,10 @@ export default function CreateProjectPage() {
         'createProject.invalidDate': 'Дата завершения должна быть позже даты начала',
         'createProject.success': 'Проект успешно создан!',
         'createProject.error': 'Ошибка при создании проекта',
-        'createProject.required': 'Обязательное поле'
+        'createProject.required': 'Обязательное поле',
+        'createProject.kazakh': 'Казахский',
+        'createProject.russian': 'Русский',
+        'createProject.multilangContent': 'Мультиязычный контент'
       },
       'kz': {
         'createProject.title': 'Жоба құру',
@@ -95,7 +105,10 @@ export default function CreateProjectPage() {
         'createProject.invalidDate': 'Аяқталу күні басталу күнінен кейінірек болуы керек',
         'createProject.success': 'Жоба сәтті құрылды!',
         'createProject.error': 'Жоба құру кезінде қате',
-        'createProject.required': 'Міндетті өріс'
+        'createProject.required': 'Міндетті өріс',
+        'createProject.kazakh': 'Қазақша',
+        'createProject.russian': 'Орысша',
+        'createProject.multilangContent': 'Көптілді мазмұн'
       }
     };
 
@@ -127,6 +140,7 @@ export default function CreateProjectPage() {
   const validateForm = () => {
     const newErrors = {};
 
+    // Проверка казахского контента
     if (!formData.title.trim()) {
       newErrors.title = getTranslation('createProject.required');
     }
@@ -135,6 +149,16 @@ export default function CreateProjectPage() {
       newErrors.description = getTranslation('createProject.required');
     }
 
+    // Проверка русского контента
+    if (!formData.title_ru.trim()) {
+      newErrors.title_ru = getTranslation('createProject.required');
+    }
+
+    if (!formData.description_ru.trim()) {
+      newErrors.description_ru = getTranslation('createProject.required');
+    }
+
+    // Проверка общих полей
     if (!formData.author.trim()) {
       newErrors.author = getTranslation('createProject.required');
     }
@@ -167,7 +191,15 @@ export default function CreateProjectPage() {
 
     try {
       const projectData = {
-        ...formData,
+        title: formData.title,
+        title_ru: formData.title_ru,
+        description: formData.description,
+        description_ru: formData.description_ru,
+        author: formData.author,
+        project_type: formData.project_type,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        video_url: formData.video_url || null,
         status
       };
 
@@ -207,6 +239,91 @@ export default function CreateProjectPage() {
     }
   };
 
+  const renderLanguageTabs = () => (
+    <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+      <button
+        type="button"
+        onClick={() => setActiveTab('kz')}
+        className={`flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+          activeTab === 'kz'
+            ? 'bg-white text-blue-600 shadow-sm'
+            : 'text-gray-600 hover:text-gray-800'
+        }`}
+      >
+        <GlobeIcon />
+        {getTranslation('createProject.kazakh')}
+      </button>
+      <button
+        type="button"
+        onClick={() => setActiveTab('ru')}
+        className={`flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+          activeTab === 'ru'
+            ? 'bg-white text-blue-600 shadow-sm'
+            : 'text-gray-600 hover:text-gray-800'
+        }`}
+      >
+        <GlobeIcon />
+        {getTranslation('createProject.russian')}
+      </button>
+    </div>
+  );
+
+  const renderContentFields = () => {
+    const isKazakh = activeTab === 'kz';
+    const titleField = isKazakh ? 'title' : 'title_ru';
+    const descriptionField = isKazakh ? 'description' : 'description_ru';
+    const titlePlaceholder = isKazakh ? 'Жоба атауын енгізіңіз' : 'Введите название проекта';
+    const descriptionPlaceholder = isKazakh ? 'Жобаңызды толық сипаттаңыз...' : 'Подробно опишите ваш проект...';
+
+    return (
+      <>
+        {/* Project Title */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-gray-700 flex items-center">
+            <TypeIcon />
+            {getTranslation('createProject.projectTitle')} *
+            <span className="ml-2 text-xs text-gray-500">
+              ({isKazakh ? 'қазақша' : 'русский'})
+            </span>
+          </label>
+          <input
+            type="text"
+            name={titleField}
+            value={formData[titleField]}
+            onChange={handleInputChange}
+            placeholder={titlePlaceholder}
+            className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors[titleField] ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {errors[titleField] && <p className="text-red-500 text-sm mt-1">{errors[titleField]}</p>}
+        </div>
+
+        {/* Description */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-gray-700 flex items-center">
+            <AlignLeftIcon />
+            {getTranslation('createProject.description')} *
+            <span className="ml-2 text-xs text-gray-500">
+              ({isKazakh ? 'қазақша' : 'русский'})
+            </span>
+          </label>
+          <textarea
+            name={descriptionField}
+            value={formData[descriptionField]}
+            onChange={handleInputChange}
+            rows="4"
+            placeholder={descriptionPlaceholder}
+            className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors[descriptionField] ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {errors[descriptionField] && <p className="text-red-500 text-sm mt-1">{errors[descriptionField]}</p>}
+        </div>
+      </>
+    );
+  };
+
   return (
     <Layout>
       <Head>
@@ -228,30 +345,25 @@ export default function CreateProjectPage() {
           )}
 
           <form className="space-y-8">
-            {/* Section: Main Project Details */}
+            {/* Section: Multilingual Content */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                <GlobeIcon />
+                {getTranslation('createProject.multilangContent')}
+              </h2>
+
+              {renderLanguageTabs()}
+              <div className="space-y-6">
+                {renderContentFields()}
+              </div>
+            </div>
+
+            {/* Section: General Information */}
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-800">
-                Основные данные проекта
+                Общая информация
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Project Title */}
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700 flex items-center">
-                    <TypeIcon />
-                    {getTranslation('createProject.projectTitle')} *
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    placeholder={getTranslation('createProject.projectTitlePlaceholder')}
-                    className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.title ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-                </div>
                 {/* Author */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700 flex items-center">
@@ -270,42 +382,23 @@ export default function CreateProjectPage() {
                   />
                   {errors.author && <p className="text-red-500 text-sm mt-1">{errors.author}</p>}
                 </div>
-              </div>
 
-              {/* Description */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700 flex items-center">
-                  <AlignLeftIcon />
-                  {getTranslation('createProject.description')} *
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  placeholder={getTranslation('createProject.descriptionPlaceholder')}
-                  className={`w-full px-4 py-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.description ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-                {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
-              </div>
-
-              {/* Project Type */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700 flex items-center">
-                  <FileTextIcon />
-                  {getTranslation('createProject.projectType')} *
-                </label>
-                <select
-                  name="project_type"
-                  value={formData.project_type}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="voting">{getTranslation('createProject.voting')}</option>
-                  <option value="application">{getTranslation('createProject.application')}</option>
-                </select>
+                {/* Project Type */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700 flex items-center">
+                    <FileTextIcon />
+                    {getTranslation('createProject.projectType')} *
+                  </label>
+                  <select
+                    name="project_type"
+                    value={formData.project_type}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="voting">{getTranslation('createProject.voting')}</option>
+                    <option value="application">{getTranslation('createProject.application')}</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -352,7 +445,7 @@ export default function CreateProjectPage() {
 
               {/* Video */}
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 flex items-center">
                   <VideoIcon />
                   {getTranslation('createProject.videoUrl')}
                 </label>
@@ -368,7 +461,7 @@ export default function CreateProjectPage() {
 
               {/* Main Photo */}
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 flex items-center">
                   <UploadIcon />
                   {getTranslation('createProject.mainPhoto')}
                 </label>
@@ -380,6 +473,13 @@ export default function CreateProjectPage() {
                     <UploadIcon />
                     {getTranslation('createProject.choosePhoto')}
                   </label>
+                  <input
+                    id="mainPhoto"
+                    type="file"
+                    onChange={handlePhotoChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
                   {mainPhoto && (
                     <span className="text-sm text-gray-500 truncate">{mainPhoto.name}</span>
                   )}
