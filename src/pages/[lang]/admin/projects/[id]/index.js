@@ -46,6 +46,20 @@ function AdminProjectDetails() {
 
   const [selectedParticipantPhoto, setSelectedParticipantPhoto] = useState(null);
 
+  // Новые состояния для редактирования участника
+  const [showEditParticipantModal, setShowEditParticipantModal] = useState(false);
+  const [editingParticipant, setEditingParticipant] = useState(null);
+  const [editParticipantForm, setEditParticipantForm] = useState({
+    name: '',
+    description: '',
+    description_ru: '',
+    video_url: '',
+    instagram_url: '',
+    facebook_url: '',
+    linkedin_url: '',
+    twitter_url: ''
+  });
+
   useEffect(() => {
     if (id) {
       loadProjectDetails();
@@ -148,6 +162,74 @@ function AdminProjectDetails() {
     } catch (error) {
       console.error('Ошибка добавления участника:', error);
       alert('Ошибка добавления участника');
+    }
+  };
+
+  // Функция для открытия модального окна редактирования
+  const handleEditParticipant = (participant) => {
+    setEditingParticipant(participant);
+    setEditParticipantForm({
+      name: participant.name || '',
+      description: participant.description || '',
+      description_ru: participant.description_ru || '',
+      video_url: participant.video_url || '',
+      instagram_url: participant.instagram_url || '',
+      facebook_url: participant.facebook_url || '',
+      linkedin_url: participant.linkedin_url || '',
+      twitter_url: participant.twitter_url || ''
+    });
+    setShowEditParticipantModal(true);
+  };
+
+  // Функция для обновления участника
+  const handleUpdateParticipant = async (e) => {
+    e.preventDefault();
+
+    if (!editParticipantForm.name.trim()) {
+      alert('Введите имя участника');
+      return;
+    }
+
+    try {
+      const updateData = {
+        name: editParticipantForm.name,
+        description: editParticipantForm.description || null,
+        description_ru: editParticipantForm.description_ru || null,
+        video_url: editParticipantForm.video_url || null,
+        instagram_url: editParticipantForm.instagram_url || null,
+        facebook_url: editParticipantForm.facebook_url || null,
+        linkedin_url: editParticipantForm.linkedin_url || null,
+        twitter_url: editParticipantForm.twitter_url || null
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/v2/projects/participants/${editingParticipant.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        loadProjectDetails();
+        setShowEditParticipantModal(false);
+        setEditingParticipant(null);
+        setEditParticipantForm({
+          name: '',
+          description: '',
+          description_ru: '',
+          video_url: '',
+          instagram_url: '',
+          facebook_url: '',
+          linkedin_url: '',
+          twitter_url: ''
+        });
+      } else {
+        alert('Ошибка обновления участника: ' + (data.detail || 'Неизвестная ошибка'));
+      }
+    } catch (error) {
+      console.error('Ошибка обновления участника:', error);
+      alert('Ошибка обновления участника');
     }
   };
 
@@ -514,11 +596,23 @@ function AdminProjectDetails() {
                         {participant.description}
                       </p>
                     )}
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex justify-between items-center text-sm mb-3">
                       <span className="font-medium text-blue-600 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 16a2.5 2.5 0 002.5-2.5v-10A2.5 2.5 0 005.5 1h-1a2.5 2.5 0 00-2.5 2.5v10A2.5 2.5 0 004.5 16h1zM14.5 4a2.5 2.5 0 00-2.5 2.5v10A2.5 2.5 0 0014.5 19h1a2.5 2.5 0 002.5-2.5v-10A2.5 2.5 0 0015.5 4h-1z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M5.5 16a2.5 2.5 0 002.5-2.5v-10A2.5 2.5 0 005.5 1h-1a2.5 2.5 0 00-2.5 2.5v10A2.5 2.5 0 004.5 16h1zM14.5 4a2.5 2.5 0 00-2.5 2.5v10A2.5 2.5 0 0014.5 19h1a2.5 2.5 0 002.5-2.5v-10A2.5 2.5 0 0015.5 4h-1z" />
+                        </svg>
                         {participant.votes_count} голосов
                       </span>
+                    </div>
+                    {/* Кнопки действий */}
+                    <div className="flex justify-between items-center">
+                      <button
+                        onClick={() => handleEditParticipant(participant)}
+                        className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm font-medium flex items-center transition-colors duration-200"
+                      >
+                        <EditIcon />
+                        Редактировать
+                      </button>
                       <button
                         onClick={() => handleDeleteParticipant(participant.id)}
                         className="text-red-600 hover:text-red-800 transition-colors duration-200"
@@ -801,6 +895,203 @@ function AdminProjectDetails() {
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
                 >
                   Добавить участника
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for editing participant */}
+      {showEditParticipantModal && editingParticipant && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative p-6 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-xl bg-white max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900">
+                Редактировать участника: {editingParticipant.name}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditParticipantModal(false);
+                  setEditingParticipant(null);
+                  setEditParticipantForm({
+                    name: '',
+                    description: '',
+                    description_ru: '',
+                    video_url: '',
+                    instagram_url: '',
+                    facebook_url: '',
+                    linkedin_url: '',
+                    twitter_url: ''
+                  });
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateParticipant} className="space-y-6">
+              {/* Имя участника */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Имя участника*
+                </label>
+                <input
+                  type="text"
+                  value={editParticipantForm.name}
+                  onChange={(e) => setEditParticipantForm({...editParticipantForm, name: e.target.value})}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  placeholder="Введите имя участника"
+                />
+              </div>
+
+              {/* Мультиязычное описание */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Описание участника (мультиязычное)
+                </label>
+
+                {renderParticipantLanguageTabs()}
+
+                {participantLanguageTab === 'kz' ? (
+                  <textarea
+                    value={editParticipantForm.description}
+                    onChange={(e) => setEditParticipantForm({...editParticipantForm, description: e.target.value})}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    placeholder="Қатысушы туралы қазақша сипаттама..."
+                  />
+                ) : (
+                  <textarea
+                    value={editParticipantForm.description_ru}
+                    onChange={(e) => setEditParticipantForm({...editParticipantForm, description_ru: e.target.value})}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    placeholder="Описание участника на русском языке..."
+                  />
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Описание на {participantLanguageTab === 'kz' ? 'казахском' : 'русском'} языке
+                </p>
+              </div>
+
+              {/* Текущее фото */}
+              {editingParticipant.photo_url && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Текущее фото
+                  </label>
+                  <img
+                    src={editingParticipant.photo_url}
+                    alt={editingParticipant.name}
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Для изменения фото нужно удалить и создать участника заново
+                  </p>
+                </div>
+              )}
+
+              {/* Дополнительные ссылки */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium text-gray-700">Дополнительные ссылки</h4>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    Ссылка на YouTube видео
+                  </label>
+                  <input
+                    type="url"
+                    value={editParticipantForm.video_url}
+                    onChange={(e) => setEditParticipantForm({...editParticipantForm, video_url: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Instagram
+                    </label>
+                    <input
+                      type="url"
+                      value={editParticipantForm.instagram_url}
+                      onChange={(e) => setEditParticipantForm({...editParticipantForm, instagram_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                      placeholder="https://instagram.com/username"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Facebook
+                    </label>
+                    <input
+                      type="url"
+                      value={editParticipantForm.facebook_url}
+                      onChange={(e) => setEditParticipantForm({...editParticipantForm, facebook_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                      placeholder="https://facebook.com/username"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      LinkedIn
+                    </label>
+                    <input
+                      type="url"
+                      value={editParticipantForm.linkedin_url}
+                      onChange={(e) => setEditParticipantForm({...editParticipantForm, linkedin_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                      placeholder="https://linkedin.com/in/username"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Twitter
+                    </label>
+                    <input
+                      type="url"
+                      value={editParticipantForm.twitter_url}
+                      onChange={(e) => setEditParticipantForm({...editParticipantForm, twitter_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                      placeholder="https://twitter.com/username"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditParticipantModal(false);
+                    setEditingParticipant(null);
+                    setEditParticipantForm({
+                      name: '',
+                      description: '',
+                      description_ru: '',
+                      video_url: '',
+                      instagram_url: '',
+                      facebook_url: '',
+                      linkedin_url: '',
+                      twitter_url: ''
+                    });
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+                >
+                  Сохранить изменения
                 </button>
               </div>
             </form>

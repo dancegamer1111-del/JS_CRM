@@ -6,6 +6,19 @@ import AdminLayout from '../../../../components/layouts/AdminLayout';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+// Иконки
+const DeleteIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
+  </svg>
+);
+
+const WarningIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+  </svg>
+);
+
 function AdminProjectsList() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +28,11 @@ function AdminProjectsList() {
     status: '',
     search: ''
   });
+
+  // Состояния для модального окна подтверждения удаления
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const router = useRouter();
   const { lang = 'ru' } = router.query;
@@ -33,7 +51,6 @@ function AdminProjectsList() {
       if (filter.type) params.append('project_type', filter.type);
       if (filter.status) params.append('status', filter.status);
       params.append('limit', '50');
-
 
       if (filter.search) {
         url = `${API_BASE_URL}/api/v2/projects/search`;
@@ -57,18 +74,26 @@ function AdminProjectsList() {
     }
   };
 
-  const handleDeleteProject = async (projectId) => {
-    if (!window.confirm('Вы уверены, что хотите удалить этот проект?')) {
-      return;
-    }
+  // Функция для открытия модального окна подтверждения удаления
+  const handleDeleteClick = (project) => {
+    setProjectToDelete(project);
+    setShowDeleteModal(true);
+  };
+
+  // Функция для подтверждения удаления
+  const confirmDelete = async () => {
+    if (!projectToDelete) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v2/projects/${projectId}`, {
+      setDeleteLoading(true);
+      const response = await fetch(`${API_BASE_URL}/api/v2/projects/${projectToDelete.id}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
-        setProjects(projects.filter(p => p.id !== projectId));
+        setProjects(projects.filter(p => p.id !== projectToDelete.id));
+        setShowDeleteModal(false);
+        setProjectToDelete(null);
       } else {
         const data = await response.json();
         alert('Ошибка удаления: ' + (data.detail || 'Неизвестная ошибка'));
@@ -76,7 +101,15 @@ function AdminProjectsList() {
     } catch (error) {
       console.error('Ошибка удаления:', error);
       alert('Ошибка удаления проекта');
+    } finally {
+      setDeleteLoading(false);
     }
+  };
+
+  // Функция для отмены удаления
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setProjectToDelete(null);
   };
 
   const handleCompleteProject = async (projectId) => {
@@ -266,22 +299,93 @@ function AdminProjectsList() {
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-6 flex space-x-3">
-                <Link
-                  href={`/${lang}/admin/projects/${project.id}`}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex-1 text-center"
+              <div className="mt-6 space-y-3">
+                <div className="flex space-x-3">
+                  <Link
+                    href={`/${lang}/admin/projects/${project.id}`}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex-1 text-center"
+                  >
+                    Детали
+                  </Link>
+                  <Link
+                    href={`/${lang}/admin/projects/${project.id}/edit`}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors duration-200 flex-1 text-center"
+                  >
+                    Редактировать
+                  </Link>
+                </div>
+                {/* Кнопка удаления */}
+                <button
+                  onClick={() => handleDeleteClick(project)}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center"
                 >
-                  Детали
-                </Link>
-                <Link
-                  href={`/${lang}/admin/projects/${project.id}/edit`}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors duration-200 flex-1 text-center"
-                >
-                  Редактировать
-                </Link>
+                  <DeleteIcon />
+                  <span className="ml-2">Удалить проект</span>
+                </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Модальное окно подтверждения удаления */}
+      {showDeleteModal && projectToDelete && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative p-6 border w-full max-w-md shadow-lg rounded-xl bg-white">
+            <div className="flex items-center mb-4">
+              <WarningIcon />
+              <h3 className="text-lg font-bold text-gray-900 ml-3">
+                Подтвердите удаление
+              </h3>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 mb-2">
+                Вы действительно хотите удалить проект?
+              </p>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="font-medium text-gray-900">{projectToDelete.title}</p>
+                <p className="text-sm text-gray-600">
+                  Тип: {getProjectTypeDisplay(projectToDelete.project_type)}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Статус: {getStatusDisplay(projectToDelete.status)}
+                </p>
+              </div>
+              <p className="text-red-600 text-sm mt-3 font-medium">
+                ⚠️ Это действие нельзя отменить. Все данные проекта будут безвозвратно удалены.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={cancelDelete}
+                disabled={deleteLoading}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleteLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors duration-200 flex items-center"
+              >
+                {deleteLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Удаление...
+                  </>
+                ) : (
+                  <>
+                    <DeleteIcon />
+                    <span className="ml-2">Удалить</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </AdminLayout>
